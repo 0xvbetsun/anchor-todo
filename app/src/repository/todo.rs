@@ -11,7 +11,7 @@ pub enum InsertError {
     Unknown,
 }
 
-pub trait Repository {
+pub trait Repository: Send + Sync {
     fn create_list(&self, title: String, description: String) -> Result<TodoList, InsertError>;
     fn create_item(&self, title: String, description: String) -> Result<TodoItem, InsertError>;
 }
