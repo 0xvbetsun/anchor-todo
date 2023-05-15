@@ -13,6 +13,7 @@ pub enum InsertError {
 
 pub trait Repository: Send + Sync {
     fn create_list(&self, title: String, description: String) -> Result<TodoList, InsertError>;
+    fn all_lists(&self) -> Vec<TodoList>;
     fn create_item(&self, title: String, description: String) -> Result<TodoItem, InsertError>;
 }
 
@@ -25,8 +26,8 @@ pub struct InMemoryRepository {
 
 impl InMemoryRepository {
     pub fn new() -> Self {
-        let last_list_id = AtomicU16::new(0);
-        let last_item_id = AtomicU16::new(0);
+        let last_list_id = AtomicU16::new(1);
+        let last_item_id = AtomicU16::new(1);
         let lists: Mutex<Vec<TodoList>> = Mutex::new(vec![]);
         let items: Mutex<Vec<TodoItem>> = Mutex::new(vec![]);
 
@@ -53,6 +54,10 @@ impl Repository for InMemoryRepository {
         let list = TodoList::new(id, title, description);
         lock.push(list.clone());
         Ok(list)
+    }
+
+    fn all_lists(&self) -> Vec<TodoList> {
+        self.lists.lock().unwrap().to_vec()
     }
 
     fn create_item(&self, title: String, description: String) -> Result<TodoItem, InsertError> {
