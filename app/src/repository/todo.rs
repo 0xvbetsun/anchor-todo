@@ -1,90 +1,36 @@
-use crate::domain::entities::{TodoItem, TodoList};
-use anchor_client::solana_sdk::pubkey::Pubkey;
-use std::str::FromStr;
-use std::sync::{
-    atomic::{AtomicU16, Ordering},
-    Mutex,
-};
+use crate::domain::entities::TodoItem;
+use axum::async_trait;
+use std::sync::atomic::Ordering;
 
-pub enum InsertError {
-    Conflict,
+use super::repository::InMemoryRepository;
+
+#[derive(Debug)]
+pub enum TodoRepoError {
     Unknown,
+    #[allow(dead_code)]
+    NotFound,
+    InvalidTitle,
 }
 
-pub trait Repository: Send + Sync {
-    fn create_list(&self, title: String, description: String) -> Result<TodoList, InsertError>;
-    fn all_lists(&self) -> Vec<TodoList>;
-    fn create_item(&self, title: String, description: String) -> Result<TodoItem, InsertError>;
+#[async_trait]
+pub trait TodoRepository: Send + Sync {
+    async fn create(&self, title: String, description: String) -> Result<TodoItem, TodoRepoError>;
 }
 
-pub struct InMemoryRepository {
-    last_list_id: AtomicU16,
-    last_item_id: AtomicU16,
-    lists: Mutex<Vec<TodoList>>,
-    items: Mutex<Vec<TodoItem>>,
-}
-
-impl InMemoryRepository {
-    pub fn new() -> Self {
-        let last_list_id = AtomicU16::new(1);
-        let last_item_id = AtomicU16::new(1);
-        let lists: Mutex<Vec<TodoList>> = Mutex::new(vec![]);
-        let items: Mutex<Vec<TodoItem>> = Mutex::new(vec![]);
-
-        Self {
-            last_list_id,
-            last_item_id,
-            lists,
-            items,
-        }
-    }
-}
-
-impl Repository for InMemoryRepository {
-    fn create_list(&self, title: String, description: String) -> Result<TodoList, InsertError> {
-        let mut lock = match self.lists.lock() {
+#[async_trait]
+impl TodoRepository for InMemoryRepository {
+    async fn create(&self, title: String, description: String) -> Result<TodoItem, TodoRepoError> {
+        let mut lock = match self.items.write() {
             Ok(lock) => lock,
-            _ => return Err(InsertError::Unknown),
-        };
-
-        if lock.iter().any(|list| list.title == title) {
-            return Err(InsertError::Conflict);
-        }
-        let id = self.last_list_id.fetch_add(1, Ordering::Relaxed);
-        let list = TodoList::new(id, title, description);
-        lock.push(list.clone());
-        Ok(list)
-    }
-
-    fn all_lists(&self) -> Vec<TodoList> {
-        self.lists.lock().unwrap().to_vec()
-    }
-
-    fn create_item(&self, title: String, description: String) -> Result<TodoItem, InsertError> {
-        let mut lock = match self.items.lock() {
-            Ok(lock) => lock,
-            _ => return Err(InsertError::Unknown),
+            _ => return Err(TodoRepoError::Unknown),
         };
 
         if lock.iter().any(|item| item.title == title) {
-            return Err(InsertError::Conflict);
+            return Err(TodoRepoError::InvalidTitle);
         }
         let id = self.last_item_id.fetch_add(1, Ordering::Relaxed);
         let item = TodoItem::new(id, title, description);
         lock.push(item.clone());
         Ok(item)
-    }
-}
-
-pub struct SolanaRepository {
-    program_id: Pubkey,
-}
-
-impl SolanaRepository {
-    pub fn try_new() -> Result<Self, ()> {
-        match Pubkey::from_str("FsgyMvD4vw6xSMNkFD14gbgRK5kadrZYzF1xGAcj2WfR") {
-            Ok(program_id) => Ok(Self { program_id }),
-            Err(_) => return Err(()),
-        }
     }
 }

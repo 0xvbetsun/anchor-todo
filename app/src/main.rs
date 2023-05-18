@@ -1,25 +1,30 @@
-#![feature(decl_macro)]
 mod api;
 mod domain;
 mod repository;
 
-#[macro_use]
-extern crate rocket;
-#[macro_use] 
-extern crate rocket_contrib;
+use crate::{api::list::DynListRepository, repository::repository::InMemoryRepository};
 
-use std::sync::Mutex;
+use axum::{routing::get, Router};
+use std::{net::SocketAddr, sync::Arc};
 
-use repository::todo::{InMemoryRepository, Repository};
-
-fn main() {
-    rocket::ignite()
-        .mount(
-            "/api",
-            routes![api::health::check, api::list::create, api::list::all],
+#[tokio::main]
+async fn main() {
+    let app = Router::new()
+        .route("/health", get(api::health::check))
+        .route("/api/lists", get(api::list::all).post(api::list::create))
+        .route(
+            "/api/lists/:id",
+            get(api::list::find)
+                .patch(api::list::update)
+                .delete(api::list::remove),
         )
-        .manage(Mutex::new(
-            Box::new(InMemoryRepository::new()) as Box<dyn Repository>
-        ))
-        .launch();
+        .with_state(Arc::new(InMemoryRepository::new()) as DynListRepository);
+
+    let addr = SocketAddr::from(([127, 0, 0, 1], 8000));
+    println!("Server started, listening on {addr}");
+    axum::Server::bind(&addr)
+        .serve(app.into_make_service())
+        .await
+        .unwrap();
+    println!("stopped listening");
 }

@@ -1,14 +1,17 @@
-#[derive(Clone)]
+use serde::Serialize;
+
+#[derive(Clone, Serialize)]
 pub enum Status {
     Active,
     Deleted,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Serialize)]
 pub struct TodoList {
     pub id: u16,
     pub title: String,
     pub description: String,
+    #[serde(skip_serializing)]
     pub status: Status,
 }
 

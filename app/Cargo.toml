@@ -6,7 +6,9 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-rocket = "0.4.11"
+axum = "0.6.18"
+tokio = { version = "1.23.0", features = ["full"] }
+tower = { version = "0.4.13", features = ["timeout"] }
 serde = "1.0"
 serde_json = "1.0"
 serde_derive = "1.0"
@@ -14,7 +16,5 @@ anchor-client = { version = "0.27.0", features = ["debug"] }
 anchor-lang = "0.27.0"
 solana-sdk = "1.15.2"
 
-[dependencies.rocket_contrib]
-version = "0.4.2"
-default-features = false
-features = ["json"]
+[dev-dependencies]
+axum-macros = "0.3.7"
