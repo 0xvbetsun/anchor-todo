@@ -2,7 +2,7 @@ use axum::{
     extract::{Path, State},
     http::StatusCode,
     response::{IntoResponse, Response},
-    Json,
+    Json, Router, routing::get,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::json;
@@ -25,6 +25,18 @@ pub type DynListRepository = std::sync::Arc<dyn ListRepository + Send + Sync>;
 pub struct ListRequest {
     pub title: String,
     pub description: String,
+}
+
+pub fn routes(repo: DynListRepository) -> Router {
+    Router::new()
+        .route("/lists", get(all).post(create))
+        .route(
+            "/lists/:id",
+            get(find)
+                .patch(update)
+                .delete(remove),
+        )
+        .with_state(repo)
 }
 
 pub async fn create(

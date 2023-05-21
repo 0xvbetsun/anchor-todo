@@ -1,6 +1,14 @@
 # Anchor TODO App
 
-## Run Client
+## Local Run
+
+### Run Solana Local Validator
+
+```sh
+solana-test-validator
+```
+
+### Run Client
 
 ```sh
 cargo run -p app
