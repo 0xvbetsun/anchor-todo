@@ -1,21 +1,31 @@
 use anchor_lang::prelude::*;
 
-use crate::{constants::MAX_TODO_LIST_LENGTH, state::TodoListAccountData};
+use crate::{constant::USER_TAG, state::UserProfile};
 
-#[derive(Accounts)]
-pub struct Initialize<'info> {
-  #[account(init, payer = user, space = 8 + TodoListAccountData::MAX_SIZE)]
-  pub todo_list: Account<'info, TodoListAccountData>,
-  #[account(mut)]
-  pub user: Signer<'info>,
-  pub system_program: Program<'info, System>,
+pub fn initialize(ctx: Context<InitializeUser>) -> Result<()> {
+    // Initialize user profile with default data
+    let user_profile = &mut ctx.accounts.user_profile;
+    user_profile.authority = ctx.accounts.authority.key();
+    user_profile.last_todo = 0;
+    user_profile.todo_count = 0;
+
+    Ok(())
 }
 
-pub fn initialize(ctx: Context<Initialize>) -> Result<()> {
-  ctx.accounts.todo_list.set_inner(TodoListAccountData {
-    todos: Vec::with_capacity(MAX_TODO_LIST_LENGTH),
-    deleted_indexes: Vec::with_capacity(MAX_TODO_LIST_LENGTH),
-    count: 0,
-  });
-  Ok(())
+#[derive(Accounts)]
+#[instruction()]
+pub struct InitializeUser<'info> {
+    #[account(mut)]
+    pub authority: Signer<'info>,
+
+    #[account(
+        init,
+        seeds = [USER_TAG, authority.key().as_ref()],
+        bump,
+        payer = authority,
+        space = 8 + std::mem::size_of::<UserProfile>(),
+    )]
+    pub user_profile: Box<Account<'info, UserProfile>>,
+
+    pub system_program: Program<'info, System>,
 }
