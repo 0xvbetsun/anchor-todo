@@ -1,6 +1,9 @@
-use std::{sync::{atomic::AtomicU16, RwLock}, str::FromStr};
-
-use anchor_client::solana_sdk::pubkey::Pubkey;
+use anchor_client::{Client, Cluster, Program};
+use solana_sdk::{
+    commitment_config::CommitmentConfig,
+    signature::{read_keypair_file, Keypair},
+};
+use std::sync::{atomic::AtomicU16, Arc, RwLock};
 
 use crate::domain::entities::{TodoItem, TodoList};
 
@@ -28,14 +31,25 @@ impl InMemoryRepository {
 }
 
 pub struct SolanaRepository {
-    program_id: Pubkey,
+    pub payer: Arc<Keypair>,
+    pub program: Program<Arc<Keypair>>,
 }
 
 impl SolanaRepository {
-    pub fn try_new() -> Result<Self, ()> {
-        match Pubkey::from_str("FsgyMvD4vw6xSMNkFD14gbgRK5kadrZYzF1xGAcj2WfR") {
-            Ok(program_id) => Ok(Self { program_id }),
-            Err(_) => return Err(()),
-        }
+    pub fn try_new<'a>() -> Result<Self, &'a str> {
+        let cluster = Cluster::Localnet;
+        let payer = match read_keypair_file("~/.config/solana/id.json") {
+            Ok(kp) => kp,
+            Err(_) => return Err("requires a keypair file"),
+        };
+        let payer = Arc::new(payer);
+        let provider = Client::new_with_options(
+            cluster.clone(),
+            payer.clone(),
+            CommitmentConfig::confirmed(),
+        );
+
+        let program = provider.program(todo::ID);
+        Ok(Self { program, payer })
     }
 }

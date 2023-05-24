@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 
 use crate::{
-    constant::{TODO_TAG, USER_TAG},
+    constants::{TODO_TAG, USER_TAG},
     state::{TodoAccount, UserProfile},
 };
 

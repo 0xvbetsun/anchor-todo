@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 
-use crate::{constant::USER_TAG, state::UserProfile};
+use crate::{constants::USER_TAG, state::UserProfile};
 
 pub fn initialize(ctx: Context<InitializeUser>) -> Result<()> {
     // Initialize user profile with default data
@@ -20,8 +20,6 @@ pub struct InitializeUser<'info> {
 
     #[account(
         init,
-        seeds = [USER_TAG, authority.key().as_ref()],
-        bump,
         payer = authority,
         space = 8 + std::mem::size_of::<UserProfile>(),
     )]

@@ -1,10 +1,12 @@
-use std::sync::atomic::Ordering;
-
 use axum::async_trait;
+use std::sync::atomic::Ordering;
 
 use crate::domain::entities::TodoList;
 
-use super::repository::InMemoryRepository;
+use super::repository::{InMemoryRepository, SolanaRepository};
+use solana_sdk::signature::Signer;
+use todo::accounts as todo_acc;
+use todo::instruction as todo_ix;
 
 #[derive(Debug)]
 pub enum ListRepoError {
@@ -84,5 +86,43 @@ impl ListRepository for InMemoryRepository {
         }
 
         return Err(ListRepoError::NotFound);
+    }
+}
+
+#[async_trait]
+impl ListRepository for SolanaRepository {
+    async fn create(&self, title: String, description: String) -> Result<TodoList, ListRepoError> {
+        unimplemented!()
+    }
+    async fn all(&self) -> Vec<TodoList> {
+        let res = self
+            .program
+            .request()
+            .accounts(todo_acc::InitializeUser {
+                user_profile: todo::id(),
+                authority: self.payer.pubkey(),
+                system_program: todo::ID,
+            })
+            .args(todo_ix::Initialize {})
+            .send()
+            .unwrap();
+        
+        println!("{res:?}");
+        unimplemented!()
+    }
+    async fn find(&self, id: u16) -> Result<TodoList, ListRepoError> {
+        unimplemented!()
+    }
+    async fn update(
+        &self,
+        id: u16,
+        title: String,
+        description: String,
+    ) -> Result<TodoList, ListRepoError> {
+        unimplemented!()
+    }
+
+    async fn remove(&self, id: u16) -> Result<(), ListRepoError> {
+        unimplemented!()
     }
 }
