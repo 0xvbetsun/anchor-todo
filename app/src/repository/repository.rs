@@ -3,21 +3,21 @@ use solana_sdk::{
     commitment_config::CommitmentConfig,
     signature::{read_keypair_file, Keypair},
 };
-use std::sync::{atomic::AtomicU16, Arc, RwLock};
+use std::sync::{atomic::AtomicU8, Arc, RwLock};
 
 use crate::domain::entities::{TodoItem, TodoList};
 
 pub struct InMemoryRepository {
-    pub last_list_id: AtomicU16,
-    pub last_item_id: AtomicU16,
+    pub last_list_id: AtomicU8,
+    pub last_item_id: AtomicU8,
     pub lists: RwLock<Vec<TodoList>>,
     pub items: RwLock<Vec<TodoItem>>,
 }
 
 impl InMemoryRepository {
     pub fn new() -> Self {
-        let last_list_id = AtomicU16::new(1);
-        let last_item_id = AtomicU16::new(1);
+        let last_list_id = AtomicU8::new(1);
+        let last_item_id = AtomicU8::new(1);
         let lists: RwLock<Vec<TodoList>> = RwLock::new(vec![]);
         let items: RwLock<Vec<TodoItem>> = RwLock::new(vec![]);
 

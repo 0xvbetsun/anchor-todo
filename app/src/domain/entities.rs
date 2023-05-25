@@ -8,7 +8,7 @@ pub enum Status {
 
 #[derive(Clone, Serialize)]
 pub struct TodoList {
-    pub id: u16,
+    pub id: u8,
     pub title: String,
     pub description: String,
     #[serde(skip_serializing)]
@@ -16,7 +16,7 @@ pub struct TodoList {
 }
 
 impl TodoList {
-    pub fn new(id: u16, title: String, description: String) -> Self {
+    pub fn new(id: u8, title: String, description: String) -> Self {
         Self {
             id,
             title,
@@ -28,7 +28,7 @@ impl TodoList {
 
 #[derive(Clone)]
 pub struct TodoItem {
-    pub id: u16,
+    pub id: u8,
     pub title: String,
     pub description: String,
     pub done: bool,
@@ -36,7 +36,7 @@ pub struct TodoItem {
 }
 
 impl TodoItem {
-    pub fn new(id: u16, title: String, description: String) -> Self {
+    pub fn new(id: u8, title: String, description: String) -> Self {
         Self {
             id,
             title,

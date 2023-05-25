@@ -16,32 +16,15 @@ pub mod todo {
         instructions::initialize(ctx)
     }
 
-    pub fn create_todo(ctx: Context<CreateTodo>, content: String) -> Result<()> {
-        instructions::create_todo(ctx, content)
+    pub fn create_list(ctx: Context<CreateList>, content: String) -> Result<()> {
+        instructions::create_list(ctx, content)
     }
 
-    pub fn delete_todo(ctx: Context<RemoveTodo>, idx: u8) -> Result<()> {
-        instructions::remove_todo(ctx, idx)
+    pub fn delete_list(ctx: Context<RemoveList>, idx: u8) -> Result<()> {
+        instructions::remove_list(ctx, idx)
     }
 
-    pub fn update_todo(ctx: Context<UpdateTodo>, idx: u8) -> Result<()> {
-        instructions::update_todo(ctx, idx)
+    pub fn update_list(ctx: Context<UpdateList>, idx: u8) -> Result<()> {
+        instructions::update_List(ctx, idx)
     }
-}
-
-pub fn is_zero_account(account_info: &AccountInfo) -> bool {
-    let account_data: &[u8] = &account_info.data.borrow();
-    let len = account_data.len();
-    let mut is_zero = true;
-    for i in 0..len - 1 {
-        if account_data[i] != 0 {
-            is_zero = false;
-        }
-    }
-    is_zero
-}
-
-pub fn bump(seeds: &[&[u8]], program_id: &Pubkey) -> u8 {
-    let (_found_key, bump) = Pubkey::find_program_address(seeds, program_id);
-    bump
 }

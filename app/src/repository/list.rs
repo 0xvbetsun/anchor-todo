@@ -20,14 +20,14 @@ pub enum ListRepoError {
 pub trait ListRepository: Send + Sync {
     async fn create(&self, title: String, description: String) -> Result<TodoList, ListRepoError>;
     async fn all(&self) -> Vec<TodoList>;
-    async fn find(&self, id: u16) -> Result<TodoList, ListRepoError>;
+    async fn find(&self, id: u8) -> Result<TodoList, ListRepoError>;
     async fn update(
         &self,
-        id: u16,
+        id: u8,
         title: String,
         description: String,
     ) -> Result<TodoList, ListRepoError>;
-    async fn remove(&self, id: u16) -> Result<(), ListRepoError>;
+    async fn remove(&self, id: u8) -> Result<(), ListRepoError>;
 }
 
 #[async_trait]
@@ -51,7 +51,7 @@ impl ListRepository for InMemoryRepository {
         self.lists.read().unwrap().to_vec()
     }
 
-    async fn find(&self, id: u16) -> Result<TodoList, ListRepoError> {
+    async fn find(&self, id: u8) -> Result<TodoList, ListRepoError> {
         let lists = self.lists.read().expect("mutex poisoned");
 
         if let Some(idx) = lists.iter().position(|x| x.id == id) {
@@ -62,7 +62,7 @@ impl ListRepository for InMemoryRepository {
 
     async fn update(
         &self,
-        id: u16,
+        id: u8,
         title: String,
         description: String,
     ) -> Result<TodoList, ListRepoError> {
@@ -77,7 +77,7 @@ impl ListRepository for InMemoryRepository {
         return Err(ListRepoError::NotFound);
     }
 
-    async fn remove(&self, id: u16) -> Result<(), ListRepoError> {
+    async fn remove(&self, id: u8) -> Result<(), ListRepoError> {
         let mut lists = self.lists.write().expect("mutex poisoned");
 
         if let Some(idx) = lists.iter().position(|t| t.id == id) {
@@ -110,19 +110,19 @@ impl ListRepository for SolanaRepository {
         println!("{res:?}");
         unimplemented!()
     }
-    async fn find(&self, id: u16) -> Result<TodoList, ListRepoError> {
+    async fn find(&self, id: u8) -> Result<TodoList, ListRepoError> {
         unimplemented!()
     }
     async fn update(
         &self,
-        id: u16,
+        id: u8,
         title: String,
         description: String,
     ) -> Result<TodoList, ListRepoError> {
         unimplemented!()
     }
 
-    async fn remove(&self, id: u16) -> Result<(), ListRepoError> {
+    async fn remove(&self, id: u8) -> Result<(), ListRepoError> {
         unimplemented!()
     }
 }

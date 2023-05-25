@@ -55,7 +55,7 @@ pub async fn all(State(repo): State<DynListRepository>) -> Json<Vec<TodoList>> {
 }
 
 pub async fn find(
-    Path(id): Path<u16>,
+    Path(id): Path<u8>,
     State(repo): State<DynListRepository>,
 ) -> Result<Json<TodoList>, AppError> {
     let list: TodoList = repo.find(id).await?;
@@ -64,7 +64,7 @@ pub async fn find(
 }
 
 pub async fn update(
-    Path(id): Path<u16>,
+    Path(id): Path<u8>,
     State(repo): State<DynListRepository>,
     Json(req): Json<ListRequest>,
 ) -> Result<Json<TodoList>, AppError> {
@@ -74,7 +74,7 @@ pub async fn update(
 }
 
 pub async fn remove(
-    Path(id): Path<u16>,
+    Path(id): Path<u8>,
     State(repo): State<DynListRepository>,
 ) -> Result<impl IntoResponse, AppError> {
     repo.remove(id).await?;

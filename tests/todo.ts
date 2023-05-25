@@ -1,5 +1,6 @@
 import * as anchor from "@coral-xyz/anchor";
 import { readFileSync } from 'fs';
+import { expect } from "chai";
 import { Todo } from "../target/types/todo";
 
 export const TODO_PROGRAM_PUBKEY = '5kZtVwH69P8uUH6fZ1Dd4Fh55H4254vNnigWZ8VAZirp';
@@ -28,6 +29,9 @@ describe("todo", () => {
     console.log("Your transaction signature", tx);
 
     let state = await program.account.userProfile.fetch(userProfile.publicKey);
-    console.log("state", state);
+
+    expect(state.authority).to.eql(payer.publicKey);
+    expect(state.lastTodo).to.eql(0);
+    expect(state.todoCount).to.eql(0);
   });
 });
