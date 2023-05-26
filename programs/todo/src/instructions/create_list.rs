@@ -1,16 +1,15 @@
 use anchor_lang::prelude::*;
 
-use crate::state::{ListAccount, UserProfile, Status};
+use crate::state::{ListAccount, Status, UserProfile};
 
-pub fn create_list(ctx: Context<CreateList>, _title: String, _description: String) -> Result<()> {
+pub fn create_list(ctx: Context<CreateList>, title: String, description: String) -> Result<()> {
     let list_account = &mut ctx.accounts.list_account;
     let user_profile = &mut ctx.accounts.user_profile;
 
     // Fill contents with argument
     list_account.authority = ctx.accounts.authority.key();
-    list_account.idx = user_profile.last_list_idx;
-    list_account.title = _title;
-    list_account.description = _description;
+    list_account.title = title;
+    list_account.description = description;
     list_account.status = Status::Active;
 
     // Increase list idx for PDA
@@ -20,7 +19,7 @@ pub fn create_list(ctx: Context<CreateList>, _title: String, _description: Strin
 }
 
 #[derive(Accounts)]
-#[instruction()]
+#[instruction(title: String, description: String)]
 pub struct CreateList<'info> {
     #[account(
         mut,
@@ -31,7 +30,7 @@ pub struct CreateList<'info> {
     #[account(
         init,
         payer = authority,
-        space = std::mem::size_of::<ListAccount>() + 8,
+        space = ListAccount::space(&title, &description),
     )]
     pub list_account: Box<Account<'info, ListAccount>>,
 

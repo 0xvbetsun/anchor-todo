@@ -5,7 +5,6 @@ use crate::state::{ListAccount, UserProfile};
 pub fn remove_list(ctx: Context<RemoveList>, list_idx: u8) -> Result<()> {
     // Decreate total todo count
     let user_profile = &mut ctx.accounts.user_profile;
-    user_profile.todo_count = user_profile.todo_count.checked_sub(1).unwrap();
 
     Ok(())
 }

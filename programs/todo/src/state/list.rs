@@ -12,7 +12,7 @@ pub struct ListAccount {
 }
 
 impl ListAccount {
-    fn space(title: &str, description: &str) -> usize {
+    pub fn space(title: &str, description: &str) -> usize {
         // discriminator + authority pubkey + capacity
         8 + 32 + 1 +
             // title string

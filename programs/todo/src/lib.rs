@@ -12,19 +12,19 @@ pub mod state;
 pub mod todo {
     use super::*;
 
-    pub fn initialize(ctx: Context<InitializeUser>) -> Result<()> {
-        instructions::initialize(ctx)
+    pub fn create_user(ctx: Context<CreateUser>, name: String, username: String, password: String) -> Result<()> {
+        instructions::create_user(ctx, name, username, password)
     }
 
-    pub fn create_list(ctx: Context<CreateList>, content: String) -> Result<()> {
-        instructions::create_list(ctx, content)
+    pub fn create_list(ctx: Context<CreateList>, title: String, description: String) -> Result<()> {
+        instructions::create_list(ctx, title, description)
     }
 
     pub fn delete_list(ctx: Context<RemoveList>, idx: u8) -> Result<()> {
         instructions::remove_list(ctx, idx)
     }
 
-    pub fn update_list(ctx: Context<UpdateList>, idx: u8) -> Result<()> {
-        instructions::update_List(ctx, idx)
+    pub fn update_list(ctx: Context<UpdateList>, idx: u8, _title: String, _description: String) -> Result<()> {
+        instructions::update_list(ctx, idx, _title, _description)
     }
 }

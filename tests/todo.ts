@@ -13,12 +13,13 @@ describe("todo", () => {
   const program = new anchor.Program<Todo>(idl, TODO_PROGRAM_PUBKEY);
 
   const programProvider = program.provider as anchor.AnchorProvider;
+  const payer = programProvider.wallet;
+  const userProfile = anchor.web3.Keypair.generate();
 
-  it("Is initialized!", async () => {
-    const userProfile = anchor.web3.Keypair.generate();
-    const payer = programProvider.wallet;
+  it("Create User", async () => {
+    const [name, username, pwd] = ["john", "superJohn", "pass"];
 
-    const tx = await program.methods.initialize()
+    await program.methods.createUser(name, username, pwd)
       .accounts({
         authority: payer.publicKey,
         userProfile: userProfile.publicKey,
@@ -26,12 +27,32 @@ describe("todo", () => {
       .signers([userProfile])
       .rpc();
 
-    console.log("Your transaction signature", tx);
+    const user = await program.account.userProfile.fetch(userProfile.publicKey);
 
-    let state = await program.account.userProfile.fetch(userProfile.publicKey);
+    expect(user.authority).to.eql(payer.publicKey);
+    expect(user.name).to.eql(name);
+    expect(user.username).to.eql(username);
+    expect(user.password).to.eql(pwd);
+  });
 
-    expect(state.authority).to.eql(payer.publicKey);
-    expect(state.lastTodo).to.eql(0);
-    expect(state.todoCount).to.eql(0);
+  it("Create List", async () => {
+    const listAccount = anchor.web3.Keypair.generate();
+    const [title, description] = ["test title", "test description"];
+
+    await program.methods.createList(title, description)
+      .accounts({
+        authority: payer.publicKey,
+        userProfile: userProfile.publicKey,
+        listAccount: listAccount.publicKey,
+      })
+      .signers([listAccount])
+      .rpc();
+
+    let list = await program.account.listAccount.fetch(listAccount.publicKey);
+
+    expect(list.title).to.eql(title);
+    expect(list.description).to.eql(description);
+    expect(list.status).to.eql({ active: {} });
+    expect(list.todos).to.eql([]);
   });
 });

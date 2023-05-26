@@ -2,7 +2,7 @@ use anchor_lang::prelude::*;
 
 use crate::state::UserProfile;
 
-pub fn initialize(ctx: Context<InitializeUser>, name: String, username: String, password: String) -> Result<()> {
+pub fn create_user(ctx: Context<CreateUser>, name: String, username: String, password: String) -> Result<()> {
     // Initialize user profile with default data
     let user_profile = &mut ctx.accounts.user_profile;
     user_profile.authority = ctx.accounts.authority.key();
@@ -16,7 +16,7 @@ pub fn initialize(ctx: Context<InitializeUser>, name: String, username: String, 
 
 #[derive(Accounts)]
 #[instruction(name: String, username: String, password: String)]
-pub struct InitializeUser<'info> {
+pub struct CreateUser<'info> {
     #[account(mut)]
     pub authority: Signer<'info>,
 
