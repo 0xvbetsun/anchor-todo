@@ -4,19 +4,18 @@ use crate::state::{ListAccount, UserProfile};
 
 pub fn update_list(
     ctx: Context<UpdateList>,
-    list_idx: u8,
-    _title: String,
-    _description: String,
+    title: String,
+    description: String,
 ) -> Result<()> {
     let list_account = &mut ctx.accounts.list_account;
-    list_account.title = _title;
-    list_account.description = _description;
+    list_account.title = title;
+    list_account.description = description;
 
     Ok(())
 }
 
 #[derive(Accounts)]
-#[instruction(list_idx: u8, _title: String, _description: String)]
+#[instruction(title: String, description: String)]
 pub struct UpdateList<'info> {
     #[account(
         mut,

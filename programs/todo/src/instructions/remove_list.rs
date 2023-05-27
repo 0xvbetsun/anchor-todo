@@ -2,15 +2,22 @@ use anchor_lang::prelude::*;
 
 use crate::state::{ListAccount, UserProfile};
 
-pub fn remove_list(ctx: Context<RemoveList>, list_idx: u8) -> Result<()> {
-    // Decreate total todo count
+pub fn remove_list(ctx: Context<RemoveList>) -> Result<()> {
     let user_profile = &mut ctx.accounts.user_profile;
-
+    let list_account = &ctx.accounts.list_account;
+    // remove list
+    if let Some(idx) = user_profile
+        .lists
+        .iter()
+        .position(|k| *k == list_account.key())
+    {
+        user_profile.lists.remove(idx);
+    }
     Ok(())
 }
 
 #[derive(Accounts)]
-#[instruction(list_idx: u8)]
+#[instruction()]
 pub struct RemoveList<'info> {
     #[account(
         mut,

@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 
-use crate::state::{ListAccount, Status, UserProfile};
+use crate::state::{ListAccount, UserProfile};
 
 pub fn create_list(ctx: Context<CreateList>, title: String, description: String) -> Result<()> {
     let list_account = &mut ctx.accounts.list_account;
@@ -10,10 +10,9 @@ pub fn create_list(ctx: Context<CreateList>, title: String, description: String)
     list_account.authority = ctx.accounts.authority.key();
     list_account.title = title;
     list_account.description = description;
-    list_account.status = Status::Active;
 
-    // Increase list idx for PDA
-    user_profile.last_list_idx = user_profile.last_list_idx.checked_add(1).unwrap();
+    // add list to user profile
+    user_profile.lists.push(list_account.key());
 
     Ok(())
 }

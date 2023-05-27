@@ -284,6 +284,7 @@ dependencies = [
  "serde",
  "serde_derive",
  "serde_json",
+ "solana-account-decoder",
  "solana-sdk",
  "todo",
  "tokio",
@@ -4189,6 +4190,7 @@ name = "todo"
 version = "0.1.0"
 dependencies = [
  "anchor-lang",
+ "serde",
 ]
 
 [[package]]

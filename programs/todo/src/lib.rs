@@ -20,11 +20,11 @@ pub mod todo {
         instructions::create_list(ctx, title, description)
     }
 
-    pub fn delete_list(ctx: Context<RemoveList>, idx: u8) -> Result<()> {
-        instructions::remove_list(ctx, idx)
+    pub fn update_list(ctx: Context<UpdateList>, title: String, description: String) -> Result<()> {
+        instructions::update_list(ctx, title, description)
     }
 
-    pub fn update_list(ctx: Context<UpdateList>, idx: u8, _title: String, _description: String) -> Result<()> {
-        instructions::update_list(ctx, idx, _title, _description)
+    pub fn remove_list(ctx: Context<RemoveList>) -> Result<()> {
+        instructions::remove_list(ctx)
     }
 }

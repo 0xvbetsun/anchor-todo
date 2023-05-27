@@ -9,7 +9,6 @@ pub fn create_user(ctx: Context<CreateUser>, name: String, username: String, pas
     user_profile.name = name;
     user_profile.username = username;
     user_profile.password = password;
-    user_profile.last_list_idx = 1;
 
     Ok(())
 }

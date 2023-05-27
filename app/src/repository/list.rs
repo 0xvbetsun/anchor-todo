@@ -1,12 +1,17 @@
-use axum::async_trait;
-use std::sync::atomic::Ordering;
-
 use crate::domain::entities::TodoList;
+use anchor_client::solana_client::rpc_config::RpcAccountInfoConfig;
+use anchor_lang::prelude::Pubkey;
+use axum::async_trait;
+use solana_account_decoder::UiAccountEncoding;
+use solana_sdk::commitment_config::CommitmentConfig;
+use std::str::FromStr;
+use std::sync::atomic::Ordering;
 
 use super::repository::{InMemoryRepository, SolanaRepository};
 use solana_sdk::signature::Signer;
 use todo::accounts as todo_acc;
 use todo::instruction as todo_ix;
+use todo::state as todo_st;
 
 #[derive(Debug)]
 pub enum ListRepoError {
@@ -95,19 +100,12 @@ impl ListRepository for SolanaRepository {
         unimplemented!()
     }
     async fn all(&self) -> Vec<TodoList> {
-        let res = self
-            .program
-            .request()
-            .accounts(todo_acc::InitializeUser {
-                user_profile: todo::id(),
-                authority: self.payer.pubkey(),
-                system_program: todo::ID,
-            })
-            .args(todo_ix::Initialize {})
-            .send()
-            .unwrap();
-        
-        println!("{res:?}");
+        let pk = Pubkey::from_str("Czay7wKFi4xadSsyA3Nn12oeYHB79aubLwGEctaqMpzB").unwrap();
+
+        let res = self.rpc_client.get_account_data(&pk).unwrap();
+        let acc = String::from_utf8_lossy(&res);
+        // let acc: todo_st::UserProfile = res.deserialize_data().unwrap();
+        println!("{acc:?}");
         unimplemented!()
     }
     async fn find(&self, id: u8) -> Result<TodoList, ListRepoError> {
