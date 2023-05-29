@@ -279,6 +279,7 @@ version = "0.1.0"
 dependencies = [
  "anchor-client",
  "anchor-lang",
+ "arrayref",
  "axum",
  "axum-macros",
  "serde",

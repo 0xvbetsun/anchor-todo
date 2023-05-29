@@ -1,9 +1,8 @@
 use crate::domain::entities::TodoList;
-use anchor_client::solana_client::rpc_config::RpcAccountInfoConfig;
 use anchor_lang::prelude::Pubkey;
+use anchor_lang::AccountDeserialize;
 use axum::async_trait;
-use solana_account_decoder::UiAccountEncoding;
-use solana_sdk::commitment_config::CommitmentConfig;
+use solana_sdk::account::ReadableAccount;
 use std::str::FromStr;
 use std::sync::atomic::Ordering;
 
@@ -100,12 +99,12 @@ impl ListRepository for SolanaRepository {
         unimplemented!()
     }
     async fn all(&self) -> Vec<TodoList> {
-        let pk = Pubkey::from_str("Czay7wKFi4xadSsyA3Nn12oeYHB79aubLwGEctaqMpzB").unwrap();
+        let pk = Pubkey::from_str("9nBk7GBTf9h9Ut57NX3qyzhsCERz1myBBbWBMNU9gkN2").unwrap();
+        let acc = self.rpc_client.get_account(&pk).unwrap();
+        let mut data = acc.data();
+        let user = todo_st::UserProfile::try_deserialize(&mut data).unwrap();
 
-        let res = self.rpc_client.get_account_data(&pk).unwrap();
-        let acc = String::from_utf8_lossy(&res);
-        // let acc: todo_st::UserProfile = res.deserialize_data().unwrap();
-        println!("{acc:?}");
+        println!("{user:?}");
         unimplemented!()
     }
     async fn find(&self, id: u8) -> Result<TodoList, ListRepoError> {

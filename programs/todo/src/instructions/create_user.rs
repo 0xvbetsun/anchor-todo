@@ -1,9 +1,8 @@
 use anchor_lang::prelude::*;
 
-use crate::state::UserProfile;
+use crate::state::{UserProfile, USER_PROFILE_SPACE};
 
 pub fn create_user(ctx: Context<CreateUser>, name: String, username: String, password: String) -> Result<()> {
-    // Initialize user profile with default data
     let user_profile = &mut ctx.accounts.user_profile;
     user_profile.authority = ctx.accounts.authority.key();
     user_profile.name = name;
@@ -22,7 +21,7 @@ pub struct CreateUser<'info> {
     #[account(
         init,
         payer = authority,
-        space = UserProfile::space(&name, &username, &password),
+        space = 8 + USER_PROFILE_SPACE,
     )]
     pub user_profile: Box<Account<'info, UserProfile>>,
 

@@ -12,7 +12,7 @@ pub fn create_list(ctx: Context<CreateList>, title: String, description: String)
     list_account.description = description;
 
     // add list to user profile
-    user_profile.lists.push(list_account.key());
+    // user_profile.lists.push(list_account.key());
 
     Ok(())
 }

@@ -1,4 +1,7 @@
+use anchor_lang::prelude::ProgramError;
+use arrayref::{array_ref, array_refs};
 use serde::Serialize;
+use std::str;
 
 #[derive(Clone, Serialize)]
 pub enum Status {
@@ -47,8 +50,8 @@ impl TodoItem {
     }
 }
 
+#[derive(Debug)]
 pub struct User {
-    pub id: u16,
     pub name: String,
     pub username: String,
     pub password: String,
