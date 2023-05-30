@@ -2,20 +2,21 @@ import * as anchor from "@coral-xyz/anchor";
 import { expect } from "chai";
 import { IDL } from "../target/types/todo";
 
-export const TODO_PROGRAM_PUBKEY =
-  "5kZtVwH69P8uUH6fZ1Dd4Fh55H4254vNnigWZ8VAZirp";
+const TODO_PROGRAM_PUBKEY = new anchor.web3.PublicKey(
+  "5kZtVwH69P8uUH6fZ1Dd4Fh55H4254vNnigWZ8VAZirp"
+);
 
-const expectUser = ({ user, authority, name, username, password }) => {
+const expectUser = ({ user, authority, name, username, password, listIdx }) => {
   expect(user.authority).to.eql(authority);
   expect(user.name).to.eql(name);
   expect(user.username).to.eql(username);
   expect(user.password).to.eql(password);
+  expect(user.listIdx).to.eql(listIdx);
 };
 
-const expectList = ({ list, title, description, todos }) => {
+const expectList = ({ list, title, description }) => {
   expect(list.title).to.eql(title);
   expect(list.description).to.eql(description);
-  expect(list.todos).to.eql(todos);
 };
 
 describe("todo", () => {
@@ -49,42 +50,48 @@ describe("todo", () => {
       username,
       password,
       authority: payer.publicKey,
+      listIdx: 1,
     });
   });
 
   describe("List", () => {
-    // const listAccount = anchor.web3.Keypair.generate();
-    // console.log("list account: ", listAccount.publicKey.toString());
+    let [listPDA] = anchor.web3.PublicKey.findProgramAddressSync(
+      [Buffer.from("LIST_STATE"), userProfile.publicKey.toBuffer(), Buffer.from([1])],
+      TODO_PROGRAM_PUBKEY
+    );
+    console.log("list account: ", listPDA.toString());
 
-    // it("Create List", async () => {
-    //   const [title, description] = ["test title", "test description"];
+    it("Create List", async () => {
+      const [title, description] = ["test title", "test description"];
 
-    //   await program.methods
-    //     .createList(title, description)
-    //     .accounts({
-    //       authority: payer.publicKey,
-    //       userProfile: userProfile.publicKey,
-    //       listAccount: listAccount.publicKey,
-    //     })
-    //     .signers([listAccount])
-    //     .rpc();
+      await program.methods
+        .createList(title, description)
+        .accounts({
+          authority: payer.publicKey,
+          userProfile: userProfile.publicKey,
+          listAccount: listPDA,
+        })
+        .rpc();
+      const [list, usersLists] = await Promise.all([
+        program.account.listAccount.fetch(listPDA),
+        program.account.listAccount.all([
+          {
+            memcmp: {
+              offset: 8, // Discriminator.
+              bytes: userProfile.publicKey.toBase58(),
+            },
+          },
+        ]),
+      ]);
 
-    //   let [list, user] = await Promise.all([
-    //     program.account.listAccount.fetch(listAccount.publicKey),
-    //     program.account.userProfile.fetch(userProfile.publicKey),
-    //   ]);
+      expectList({
+        list,
+        title,
+        description,
+      });
 
-    //   expectList({
-    //     list,
-    //     title,
-    //     description,
-    //     todos: [],
-    //   });
-
-    //   expect(user.lists.map((l) => l.toString())).to.includes(
-    //     listAccount.publicKey.toString()
-    //   );
-    // });
+      expect(usersLists.length).eql(1);
+    });
 
     // it("Update List", async () => {
     //   const [newTitle, newDescription] = [

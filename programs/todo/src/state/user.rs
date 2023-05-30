@@ -3,10 +3,28 @@ use anchor_lang::prelude::*;
 #[account]
 #[derive(Default, Debug)]
 pub struct UserProfile {
-    pub authority: Pubkey, // 32
-    pub name: String,      // 24
-    pub username: String,  // 24
-    pub password: String,  // 24
+    pub authority: Pubkey,
+    pub name: String,
+    pub username: String,
+    pub password: String,
+    pub list_idx: u8,
 }
 
-pub const USER_PROFILE_SPACE: usize = 32 + 24 + 24 + 24; // 104
+const DISCRIMINATOR_LENGTH: usize = 8;
+const PUBLIC_KEY_LENGTH: usize = 32;
+const STRING_LENGTH_PREFIX: usize = 4;
+const MAX_NAME_LENGTH: usize = 20;
+const MAX_USERNAME_LENGTH: usize = 20;
+const MAX_PASSWORD_LENGTH: usize = 20;
+const LIST_INDEX_LENGTH: usize = 1;
+
+// pub const USER_PROFILE_SPACE: usize = 32 + 24 + 24 + 24 + 1; // 105
+
+impl UserProfile {
+    pub const LEN: usize = DISCRIMINATOR_LENGTH 
+    + PUBLIC_KEY_LENGTH  // authority
+    + STRING_LENGTH_PREFIX + MAX_NAME_LENGTH // name
+    + STRING_LENGTH_PREFIX + MAX_USERNAME_LENGTH // username
+    + STRING_LENGTH_PREFIX + MAX_PASSWORD_LENGTH // password
+    + LIST_INDEX_LENGTH; // list index
+}

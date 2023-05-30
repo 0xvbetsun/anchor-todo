@@ -1,13 +1,14 @@
 use crate::domain::entities::TodoList;
+use anchor_client::solana_client::rpc_filter::Memcmp;
+use anchor_client::solana_client::rpc_filter::MemcmpEncodedBytes;
+use anchor_client::solana_client::rpc_filter::MemcmpEncoding;
+use anchor_client::solana_client::rpc_filter::RpcFilterType;
 use anchor_lang::prelude::Pubkey;
-use anchor_lang::AccountDeserialize;
 use axum::async_trait;
-use solana_sdk::account::ReadableAccount;
 use std::str::FromStr;
 use std::sync::atomic::Ordering;
 
 use super::repository::{InMemoryRepository, SolanaRepository};
-use solana_sdk::signature::Signer;
 use todo::accounts as todo_acc;
 use todo::instruction as todo_ix;
 use todo::state as todo_st;
@@ -99,12 +100,19 @@ impl ListRepository for SolanaRepository {
         unimplemented!()
     }
     async fn all(&self) -> Vec<TodoList> {
-        let pk = Pubkey::from_str("9nBk7GBTf9h9Ut57NX3qyzhsCERz1myBBbWBMNU9gkN2").unwrap();
-        let acc = self.rpc_client.get_account(&pk).unwrap();
-        let mut data = acc.data();
-        let user = todo_st::UserProfile::try_deserialize(&mut data).unwrap();
+        let pk = Pubkey::from_str("AY2gNTezoQyY3kYUCwim8ZiaXXsGgoMZaDyXUUXbRuXJ").unwrap();
+        let filters = vec![
+            RpcFilterType::Memcmp(Memcmp::new_base58_encoded(8, &pk.to_bytes())),
+        ];
+        let lists = self.program.accounts::<todo_st::ListAccount>(filters);
+        println!("{lists:#?}");
 
-        println!("{user:?}");
+        // TODO: should be moved to auth repo!
+        // let acc = self.rpc_client.get_account(&pk).unwrap();
+        // let mut data = acc.data();
+        // let user = todo_st::UserProfile::try_deserialize(&mut data).unwrap();
+
+        // println!("{user:?}");
         unimplemented!()
     }
     async fn find(&self, id: u8) -> Result<TodoList, ListRepoError> {
