@@ -2,7 +2,8 @@ use axum::{
     extract::{Path, State},
     http::StatusCode,
     response::{IntoResponse, Response},
-    Json, Router, routing::get,
+    routing::get,
+    Json, Router,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::json;
@@ -27,15 +28,12 @@ pub struct ListRequest {
     pub description: String,
 }
 
+const USER_KEY: &str = "7jX6B2esEYECF9jVe4rEPSaEEhj75JMYeAgRZzWMt885";
+
 pub fn routes(repo: DynListRepository) -> Router {
     Router::new()
         .route("/lists", get(all).post(create))
-        .route(
-            "/lists/:id",
-            get(find)
-                .patch(update)
-                .delete(remove),
-        )
+        .route("/lists/:id", get(find).patch(update).delete(remove))
         .with_state(repo)
 }
 
@@ -49,7 +47,8 @@ pub async fn create(
 }
 
 pub async fn all(State(repo): State<DynListRepository>) -> Json<Vec<TodoList>> {
-    let lists: Vec<TodoList> = repo.all().await;
+    // TODO: extract key from header
+    let lists: Vec<TodoList> = repo.all(USER_KEY).await.unwrap();
 
     lists.into()
 }
@@ -58,7 +57,7 @@ pub async fn find(
     Path(id): Path<u8>,
     State(repo): State<DynListRepository>,
 ) -> Result<Json<TodoList>, AppError> {
-    let list: TodoList = repo.find(id).await?;
+    let list: TodoList = repo.find(USER_KEY, id).await?;
 
     Ok(list.into())
 }

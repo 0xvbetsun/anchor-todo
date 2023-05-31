@@ -14,7 +14,8 @@ const expectUser = ({ user, authority, name, username, password, listIdx }) => {
   expect(user.listIdx).to.eql(listIdx);
 };
 
-const expectList = ({ list, title, description }) => {
+const expectList = ({ list, id, title, description }) => {
+  expect(list.id).to.eql(id);
   expect(list.title).to.eql(title);
   expect(list.description).to.eql(description);
 };
@@ -55,8 +56,13 @@ describe("todo", () => {
   });
 
   describe("List", () => {
-    let [listPDA] = anchor.web3.PublicKey.findProgramAddressSync(
-      [Buffer.from("LIST_STATE"), userProfile.publicKey.toBuffer(), Buffer.from([1])],
+    const listId = 1;
+    const [listPDA] = anchor.web3.PublicKey.findProgramAddressSync(
+      [
+        Buffer.from("LIST_STATE"),
+        userProfile.publicKey.toBuffer(),
+        Buffer.from([listId]),
+      ],
       TODO_PROGRAM_PUBKEY
     );
     console.log("list account: ", listPDA.toString());
@@ -86,6 +92,7 @@ describe("todo", () => {
 
       expectList({
         list,
+        id: listId,
         title,
         description,
       });

@@ -18,8 +18,6 @@ const MAX_USERNAME_LENGTH: usize = 20;
 const MAX_PASSWORD_LENGTH: usize = 20;
 const LIST_INDEX_LENGTH: usize = 1;
 
-// pub const USER_PROFILE_SPACE: usize = 32 + 24 + 24 + 24 + 1; // 105
-
 impl UserProfile {
     pub const LEN: usize = DISCRIMINATOR_LENGTH 
     + PUBLIC_KEY_LENGTH  // authority

@@ -2,8 +2,8 @@ mod api;
 mod domain;
 mod repository;
 
+use crate::api::list::DynListRepository;
 use crate::repository::repository::SolanaRepository;
-use crate::{api::list::DynListRepository, repository::repository::InMemoryRepository};
 
 use axum::Router;
 use std::{net::SocketAddr, sync::Arc};
@@ -11,7 +11,7 @@ use std::{net::SocketAddr, sync::Arc};
 #[tokio::main]
 async fn main() {
     // let repo = Arc::new(InMemoryRepository::new()) as DynListRepository;
-    let sol_repo = Arc::new(SolanaRepository::try_new().unwrap()) as DynListRepository ;
+    let sol_repo = Arc::new(SolanaRepository::try_new().unwrap()) as DynListRepository;
 
     let routes_apis = Router::new().merge(api::list::routes(sol_repo.clone()));
 

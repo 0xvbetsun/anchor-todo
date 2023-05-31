@@ -1,16 +1,17 @@
 use crate::domain::entities::Status;
 use crate::domain::entities::TodoList;
 use anchor_client::solana_client::rpc_filter::Memcmp;
-use anchor_client::solana_client::rpc_filter::MemcmpEncodedBytes;
-use anchor_client::solana_client::rpc_filter::MemcmpEncoding;
 use anchor_client::solana_client::rpc_filter::RpcFilterType;
 use anchor_lang::prelude::Pubkey;
 use axum::async_trait;
+use solana_sdk::signer::Signer;
+use std::ops::Deref;
 use std::str::FromStr;
 use std::sync::atomic::Ordering;
 
 use super::repository::{InMemoryRepository, SolanaRepository};
 use todo::accounts as todo_acc;
+use todo::constants as todo_const;
 use todo::instruction as todo_ix;
 use todo::state as todo_st;
 
@@ -25,8 +26,8 @@ pub enum ListRepoError {
 #[async_trait]
 pub trait ListRepository: Send + Sync {
     async fn create(&self, title: String, description: String) -> Result<TodoList, ListRepoError>;
-    async fn all(&self) -> Vec<TodoList>;
-    async fn find(&self, id: u8) -> Result<TodoList, ListRepoError>;
+    async fn all(&self, user_key: &str) -> Result<Vec<TodoList>, ListRepoError>;
+    async fn find(&self, user_key: &str, id: u8) -> Result<TodoList, ListRepoError>;
     async fn update(
         &self,
         id: u8,
@@ -53,11 +54,11 @@ impl ListRepository for InMemoryRepository {
         Ok(list)
     }
 
-    async fn all(&self) -> Vec<TodoList> {
-        self.lists.read().unwrap().to_vec()
+    async fn all(&self, user_key: &str) -> Result<Vec<TodoList>, ListRepoError> {
+        Ok(self.lists.read().unwrap().to_vec())
     }
 
-    async fn find(&self, id: u8) -> Result<TodoList, ListRepoError> {
+    async fn find(&self, user_key: &str, id: u8) -> Result<TodoList, ListRepoError> {
         let lists = self.lists.read().expect("mutex poisoned");
 
         if let Some(idx) = lists.iter().position(|x| x.id == id) {
@@ -100,8 +101,9 @@ impl ListRepository for SolanaRepository {
     async fn create(&self, title: String, description: String) -> Result<TodoList, ListRepoError> {
         unimplemented!()
     }
-    async fn all(&self) -> Vec<TodoList> {
-        let pk = Pubkey::from_str("AY2gNTezoQyY3kYUCwim8ZiaXXsGgoMZaDyXUUXbRuXJ").unwrap();
+
+    async fn all(&self, user_key: &str) -> Result<Vec<TodoList>, ListRepoError> {
+        let pk = Pubkey::from_str(user_key).unwrap();
         let filters = vec![RpcFilterType::Memcmp(Memcmp::new_base58_encoded(
             8,
             &pk.to_bytes(),
@@ -111,15 +113,15 @@ impl ListRepository for SolanaRepository {
             .accounts::<todo_st::ListAccount>(filters)
             .unwrap();
 
-        return lists
+        return Ok(lists
             .into_iter()
             .map(|(_, list)| TodoList {
-                id: 1,
+                id: list.id,
                 title: list.title,
                 description: list.description,
                 status: Status::Active,
             })
-            .collect();
+            .collect());
 
         // println!("{lists:#?}");
 
@@ -130,9 +132,25 @@ impl ListRepository for SolanaRepository {
 
         // println!("{user:?}");
     }
-    async fn find(&self, id: u8) -> Result<TodoList, ListRepoError> {
-        unimplemented!()
+    async fn find(&self, user_key: &str, id: u8) -> Result<TodoList, ListRepoError> {
+        let pk = Pubkey::from_str(user_key).unwrap();
+        let (list_pda, _) = Pubkey::find_program_address(
+            &[todo_const::LIST_TAG, &pk.to_bytes(), &[id]],
+            &self.program.id(),
+        );
+        let list: todo_st::ListAccount = self
+            .program
+            .account::<todo_st::ListAccount>(list_pda)
+            .unwrap();
+
+        Ok(TodoList {
+            id: list.id,
+            title: list.title,
+            description: list.description,
+            status: Status::Active,
+        })
     }
+
     async fn update(
         &self,
         id: u8,

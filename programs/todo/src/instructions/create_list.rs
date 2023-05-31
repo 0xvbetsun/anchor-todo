@@ -1,16 +1,20 @@
 use anchor_lang::prelude::*;
 
-use crate::{state::{ListAccount, UserProfile, LIST_ACCOUNT_SPACE}, constants::LIST_TAG};
+use crate::{
+    constants::LIST_TAG,
+    state::{ListAccount, UserProfile},
+};
 
 pub fn create_list(ctx: Context<CreateList>, title: String, description: String) -> Result<()> {
     let list_account = &mut ctx.accounts.list_account;
     let user_profile = &mut ctx.accounts.user_profile;
 
+    list_account.id = user_profile.list_idx;
     list_account.authority = user_profile.key();
     list_account.title = title;
     list_account.description = description;
 
-    user_profile.list_idx +=  1;
+    user_profile.list_idx += 1;
 
     Ok(())
 }
@@ -27,7 +31,7 @@ pub struct CreateList<'info> {
     #[account(
         init,
         payer = authority,
-        space = 8 + LIST_ACCOUNT_SPACE,
+        space = ListAccount::LEN,
         seeds = [LIST_TAG, user_profile.key().as_ref(), &[user_profile.list_idx]],
         bump,
     )]
