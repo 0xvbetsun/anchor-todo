@@ -28,7 +28,7 @@ pub struct ListRequest {
     pub description: String,
 }
 
-const USER_KEY: &str = "7jX6B2esEYECF9jVe4rEPSaEEhj75JMYeAgRZzWMt885";
+const USER_KEY: &str = "EtNhzsHYkYHWX4dWia7snqubw4wLYcQrRuzHYGDof9nP";
 
 pub fn routes(repo: DynListRepository) -> Router {
     Router::new()
@@ -67,7 +67,9 @@ pub async fn update(
     State(repo): State<DynListRepository>,
     Json(req): Json<ListRequest>,
 ) -> Result<Json<TodoList>, AppError> {
-    let list: TodoList = repo.update(id, req.title, req.description).await?;
+    let list: TodoList = repo
+        .update(USER_KEY, id, req.title, req.description)
+        .await?;
 
     Ok(list.into())
 }
@@ -76,7 +78,7 @@ pub async fn remove(
     Path(id): Path<u8>,
     State(repo): State<DynListRepository>,
 ) -> Result<impl IntoResponse, AppError> {
-    repo.remove(id).await?;
+    repo.remove(USER_KEY, id).await?;
 
     Ok(StatusCode::NO_CONTENT)
 }

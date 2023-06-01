@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 use instructions::*;
 
-declare_id!("5kZtVwH69P8uUH6fZ1Dd4Fh55H4254vNnigWZ8VAZirp");
+declare_id!("8uvpDc9tZxwYspeqX37HtDTBQPzJZU7Gp4GaKU8qz4Us");
 
 pub mod constants;
 pub mod errors;
@@ -20,8 +20,8 @@ pub mod todo {
         instructions::create_list(ctx, title, description)
     }
 
-    pub fn update_list(ctx: Context<UpdateList>, title: String, description: String) -> Result<()> {
-        instructions::update_list(ctx, title, description)
+    pub fn update_list(ctx: Context<UpdateList>, id: u8, title: String, description: String) -> Result<()> {
+        instructions::update_list(ctx, id, title, description)
     }
 
     pub fn remove_list(ctx: Context<RemoveList>) -> Result<()> {

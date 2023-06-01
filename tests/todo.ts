@@ -3,7 +3,7 @@ import { expect } from "chai";
 import { IDL } from "../target/types/todo";
 
 const TODO_PROGRAM_PUBKEY = new anchor.web3.PublicKey(
-  "5kZtVwH69P8uUH6fZ1Dd4Fh55H4254vNnigWZ8VAZirp"
+  "8uvpDc9tZxwYspeqX37HtDTBQPzJZU7Gp4GaKU8qz4Us"
 );
 
 const expectUser = ({ user, authority, name, username, password, listIdx }) => {
@@ -78,6 +78,7 @@ describe("todo", () => {
           listAccount: listPDA,
         })
         .rpc();
+
       const [list, usersLists] = await Promise.all([
         program.account.listAccount.fetch(listPDA),
         program.account.listAccount.all([
@@ -100,30 +101,30 @@ describe("todo", () => {
       expect(usersLists.length).eql(1);
     });
 
-    // it("Update List", async () => {
-    //   const [newTitle, newDescription] = [
-    //     "new test title",
-    //     "new test description",
-    //   ];
+    it("Update List", async () => {
+      const [newTitle, newDescription] = [
+        "new test title",
+        "new test description",
+      ];
 
-    //   await program.methods
-    //     .updateList(newTitle, newDescription)
-    //     .accounts({
-    //       authority: payer.publicKey,
-    //       userProfile: userProfile.publicKey,
-    //       listAccount: listAccount.publicKey,
-    //     })
-    //     .rpc();
+      await program.methods
+        .updateList(listId, newTitle, newDescription)
+        .accounts({
+          authority: payer.publicKey,
+          userProfile: userProfile.publicKey,
+          listAccount: listPDA,
+        })
+        .rpc();
 
-    //   let list = await program.account.listAccount.fetch(listAccount.publicKey);
+      let list = await program.account.listAccount.fetch(listPDA);
 
-    //   expectList({
-    //     list,
-    //     title: newTitle,
-    //     description: newDescription,
-    //     todos: [],
-    //   });
-    // });
+      expectList({
+        list,
+        id: listId,
+        title: newTitle,
+        description: newDescription,
+      });
+    });
 
     // it("Remove List", async () => {
     //   await program.methods

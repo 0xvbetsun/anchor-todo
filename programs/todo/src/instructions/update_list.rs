@@ -1,9 +1,10 @@
 use anchor_lang::prelude::*;
 
-use crate::state::{ListAccount, UserProfile};
+use crate::{state::{ListAccount, UserProfile}, constants::LIST_TAG};
 
 pub fn update_list(
     ctx: Context<UpdateList>,
+    _id: u8,
     title: String,
     description: String,
 ) -> Result<()> {
@@ -15,7 +16,7 @@ pub fn update_list(
 }
 
 #[derive(Accounts)]
-#[instruction(title: String, description: String)]
+#[instruction(id: u8, title: String, description: String)]
 pub struct UpdateList<'info> {
     #[account(
         mut,
@@ -25,7 +26,6 @@ pub struct UpdateList<'info> {
 
     #[account(
         mut,
-        has_one = authority,
     )]
     pub list_account: Box<Account<'info, ListAccount>>,
 

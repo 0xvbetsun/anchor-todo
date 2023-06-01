@@ -2,13 +2,9 @@ use crate::domain::entities::{TodoItem, TodoList};
 use anchor_client::{solana_client::rpc_client::RpcClient, Client, Cluster, Program};
 use solana_sdk::{
     commitment_config::CommitmentConfig,
-    signature::{read_keypair_file, Keypair, Signer},
+    signature::{read_keypair_file, Keypair},
 };
-use std::{
-    ops::Deref,
-    rc::Rc,
-    sync::{atomic::AtomicU8, Arc, RwLock},
-};
+use std::sync::{atomic::AtomicU8, Arc, RwLock};
 
 pub struct InMemoryRepository {
     pub last_list_id: AtomicU8,
@@ -41,7 +37,7 @@ pub struct SolanaRepository {
 
 impl SolanaRepository {
     pub fn try_new<'a>() -> Result<Self, &'a str> {
-        let cluster = Cluster::Localnet;
+        let cluster = Cluster::Custom("http://localhost:8899".to_owned(), "ws://localhost:8900/".to_owned());
         let payer = match read_keypair_file("/Users/vbetsun/.config/solana/id.json") {
             Ok(kp) => kp,
             Err(_) => return Err("requires a keypair file"),
