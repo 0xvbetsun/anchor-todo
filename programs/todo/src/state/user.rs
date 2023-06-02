@@ -13,9 +13,9 @@ pub struct UserProfile {
 const DISCRIMINATOR_LENGTH: usize = 8;
 const PUBLIC_KEY_LENGTH: usize = 32;
 const STRING_LENGTH_PREFIX: usize = 4;
-const MAX_NAME_LENGTH: usize = 20;
-const MAX_USERNAME_LENGTH: usize = 20;
-const MAX_PASSWORD_LENGTH: usize = 20;
+const MAX_NAME_LENGTH: usize = 40;
+const MAX_USERNAME_LENGTH: usize = 40;
+const MAX_PASSWORD_LENGTH: usize = 40;
 const LIST_INDEX_LENGTH: usize = 1;
 
 impl UserProfile {

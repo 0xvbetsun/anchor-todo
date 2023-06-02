@@ -12,7 +12,12 @@ pub mod state;
 pub mod todo {
     use super::*;
 
-    pub fn create_user(ctx: Context<CreateUser>, name: String, username: String, password: String) -> Result<()> {
+    pub fn create_user(
+        ctx: Context<CreateUser>,
+        name: String,
+        username: String,
+        password: String,
+    ) -> Result<()> {
         instructions::create_user(ctx, name, username, password)
     }
 
@@ -20,7 +25,12 @@ pub mod todo {
         instructions::create_list(ctx, title, description)
     }
 
-    pub fn update_list(ctx: Context<UpdateList>, id: u8, title: String, description: String) -> Result<()> {
+    pub fn update_list(
+        ctx: Context<UpdateList>,
+        id: u8,
+        title: String,
+        description: String,
+    ) -> Result<()> {
         instructions::update_list(ctx, id, title, description)
     }
 

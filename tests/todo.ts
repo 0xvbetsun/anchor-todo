@@ -126,23 +126,30 @@ describe("todo", () => {
       });
     });
 
-    // it("Remove List", async () => {
-    //   await program.methods
-    //     .removeList()
-    //     .accounts({
-    //       authority: payer.publicKey,
-    //       userProfile: userProfile.publicKey,
-    //       listAccount: listAccount.publicKey,
-    //     })
-    //     .rpc();
+    it("Remove List", async () => {
+      await program.methods
+        .removeList()
+        .accounts({
+          authority: payer.publicKey,
+          userProfile: userProfile.publicKey,
+          listAccount: listPDA,
+        })
+        .rpc();
 
-    //   const [list, user] = await Promise.all([
-    //     program.account.listAccount.fetchNullable(listAccount.publicKey),
-    //     program.account.userProfile.fetch(userProfile.publicKey),
-    //   ]);
+      const [list, usersLists] = await Promise.all([
+        program.account.listAccount.fetchNullable(listPDA),
+        program.account.listAccount.all([
+          {
+            memcmp: {
+              offset: 8, // Discriminator.
+              bytes: userProfile.publicKey.toBase58(),
+            },
+          },
+        ]),
+      ]);
 
-    //   expect(list).to.eql(null);
-    //   expect(user.lists).to.eql([]);
-    // });
+      expect(list).to.eql(null);
+      expect(usersLists.length).eql(0);
+    });
   });
 });

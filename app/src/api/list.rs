@@ -41,7 +41,7 @@ pub async fn create(
     State(repo): State<DynListRepository>,
     Json(req): Json<ListRequest>,
 ) -> Result<(StatusCode, Json<TodoList>), AppError> {
-    let list = repo.create(req.title, req.description).await?;
+    let list = repo.create(USER_KEY, req.title, req.description).await?;
 
     Ok((StatusCode::CREATED, list.into()))
 }

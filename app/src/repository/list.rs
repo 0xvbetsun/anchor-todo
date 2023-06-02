@@ -26,7 +26,7 @@ pub enum ListRepoError {
 
 #[async_trait]
 pub trait ListRepository: Send + Sync {
-    async fn create(&self, title: String, description: String) -> Result<TodoList, ListRepoError>;
+    async fn create(&self, user: &str, title: String, description: String) -> Result<TodoList, ListRepoError>;
     async fn all(&self, user: &str) -> Result<Vec<TodoList>, ListRepoError>;
     async fn find(&self, user: &str, id: u8) -> Result<TodoList, ListRepoError>;
     async fn update(
@@ -41,7 +41,7 @@ pub trait ListRepository: Send + Sync {
 
 #[async_trait]
 impl ListRepository for InMemoryRepository {
-    async fn create(&self, title: String, description: String) -> Result<TodoList, ListRepoError> {
+    async fn create(&self, user: &str, title: String, description: String) -> Result<TodoList, ListRepoError> {
         let mut lock = match self.lists.write() {
             Ok(lock) => lock,
             _ => return Err(ListRepoError::Unknown),
@@ -101,8 +101,50 @@ impl ListRepository for InMemoryRepository {
 
 #[async_trait]
 impl ListRepository for SolanaRepository {
-    async fn create(&self, title: String, description: String) -> Result<TodoList, ListRepoError> {
-        unimplemented!()
+    async fn create(&self, user:  &str, title: String, description: String) -> Result<TodoList, ListRepoError> {
+        let pk = Pubkey::from_str(user).unwrap();
+
+        let user: todo_st::UserProfile = self
+            .program
+            .account::<todo_st::UserProfile>(pk)
+            .unwrap();
+
+        let (list_pda, _) = Pubkey::find_program_address(
+            &[todo_const::LIST_TAG, &pk.to_bytes(), &[user.list_idx]],
+            &self.program.id(),
+        );
+
+        let list_ix = self
+            .program
+            .request()
+            .accounts(todo_acc::CreateList {
+                user_profile: pk,
+                list_account: list_pda,
+                authority: self.payer.pubkey(),
+                system_program: Pubkey::from_str("11111111111111111111111111111111").unwrap(),
+            })
+            .args(todo_ix::CreateList {
+                title: title.to_owned(),
+                description: description.to_owned(),
+            })
+            .instructions()
+            .unwrap();
+
+        let tx = Transaction::new_signed_with_payer(
+            &list_ix,
+            Some(&self.payer.pubkey()),
+            &[&*self.payer],
+            self.rpc_client.get_latest_blockhash().unwrap(),
+        );
+
+        self.rpc_client.send_transaction(&tx).unwrap();
+
+        Ok(TodoList {
+            id: user.list_idx,
+            title,
+            description,
+            status: Status::Active,
+        })
     }
 
     async fn all(&self, user: &str) -> Result<Vec<TodoList>, ListRepoError> {
@@ -201,6 +243,33 @@ impl ListRepository for SolanaRepository {
     }
 
     async fn remove(&self, user: &str, id: u8) -> Result<(), ListRepoError> {
-        unimplemented!()
+        let pk = Pubkey::from_str(user).unwrap();
+        let (list_pda, _) = Pubkey::find_program_address(
+            &[todo_const::LIST_TAG, &pk.to_bytes(), &[id]],
+            &self.program.id(),
+        );
+        let list_ix = self
+            .program
+            .request()
+            .accounts(todo_acc::RemoveList {
+                user_profile: pk,
+                list_account: list_pda,
+                authority: self.payer.pubkey(),
+                system_program: Pubkey::from_str("11111111111111111111111111111111").unwrap(),
+            })
+            .args(todo_ix::RemoveList {})
+            .instructions()
+            .unwrap();
+
+        let tx = Transaction::new_signed_with_payer(
+            &list_ix,
+            Some(&self.payer.pubkey()),
+            &[&*self.payer],
+            self.rpc_client.get_latest_blockhash().unwrap(),
+        );
+
+        self.rpc_client.send_transaction(&tx).unwrap();
+
+        Ok(())
     }
 }

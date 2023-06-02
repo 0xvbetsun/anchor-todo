@@ -1,0 +1,3 @@
+port = 8000
+storage = "solana" # could be "solana" or "in-memory"
+    

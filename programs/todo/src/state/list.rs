@@ -12,8 +12,8 @@ pub struct ListAccount {
 const DISCRIMINATOR_LENGTH: usize = 8;
 const PUBLIC_KEY_LENGTH: usize = 32;
 const STRING_LENGTH_PREFIX: usize = 4;
-const MAX_TITLE_LENGTH: usize = 20;
-const MAX_DESCRIPTION_LENGTH: usize = 20;
+const MAX_TITLE_LENGTH: usize = 40;
+const MAX_DESCRIPTION_LENGTH: usize = 40;
 const INDEX_LENGTH: usize = 1;
 
 impl ListAccount {

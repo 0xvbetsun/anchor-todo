@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 
-use crate::{state::{ListAccount, UserProfile}, constants::LIST_TAG};
+use crate::state::{ListAccount, UserProfile};
 
 pub fn update_list(
     ctx: Context<UpdateList>,
@@ -24,9 +24,7 @@ pub struct UpdateList<'info> {
     )]
     pub user_profile: Box<Account<'info, UserProfile>>,
 
-    #[account(
-        mut,
-    )]
+    #[account(mut)]
     pub list_account: Box<Account<'info, ListAccount>>,
 
     #[account(mut)]

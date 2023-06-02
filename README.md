@@ -53,3 +53,4 @@ Or to recover the account's lamports, pass it as the
 ## Resources
 
 - [Solana RPC Doc](https://docs.solana.com/ru/api/http)
+- [Conventional Commits Emoji](https://gist.github.com/parmentf/359667bf23e08a1bd8241fbf47ecdef0)
