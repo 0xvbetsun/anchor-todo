@@ -27,12 +27,12 @@ pub struct SolanaRepository {
 }
 
 impl SolanaRepository {
-    pub fn try_new<'a>() -> Result<Self, &'a str> {
+    pub fn try_new<'a>(path: String) -> Result<Self, &'a str> {
         let cluster = Cluster::Custom(
             "http://localhost:8899".to_owned(),
             "ws://localhost:8900/".to_owned(),
         );
-        let payer = match read_keypair_file("/Users/vbetsun/.config/solana/id.json") {
+        let payer = match read_keypair_file(path) {
             Ok(kp) => kp,
             Err(_) => return Err("requires a keypair file"),
         };
@@ -56,10 +56,10 @@ impl SolanaRepository {
 
 #[async_trait]
 impl Repository for SolanaRepository {
-    async fn create_user(&self, name: &str, username: &str, password: &str) -> Result<User, RepoError> {
+    async fn create_user(&self, _name: &str, _username: &str, _password: &str) -> Result<User, RepoError> {
         unimplemented!()
     }
-    async fn find_user(&self, username: &str, password: &str) -> Result<User, RepoError>{
+    async fn find_user(&self, _username: &str, _password: &str) -> Result<User, RepoError>{
         unimplemented!()
     }
     

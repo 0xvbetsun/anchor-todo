@@ -13,7 +13,6 @@ pub type DynRepository = Arc<dyn Repository + Send + Sync>;
 #[derive(Debug)]
 pub enum RepoError {
     Unknown,
-    #[allow(dead_code)]
     NotFound,
     InvalidTitle,
 }

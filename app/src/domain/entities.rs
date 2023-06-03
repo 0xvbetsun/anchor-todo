@@ -26,7 +26,7 @@ pub struct TodoItem {
 }
 
 impl TodoItem {
-    pub fn new(id: u8, title: String, description: String) -> Self {
+    pub fn _new(id: u8, title: String, description: String) -> Self {
         Self {
             id,
             title,

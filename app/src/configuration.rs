@@ -9,6 +9,7 @@ pub enum Storage {
 pub struct Settings {
     pub port: u16,
     pub storage: Storage,
+    pub keypair_file: String,
 }
 
 impl<'de> Deserialize<'de> for Storage {

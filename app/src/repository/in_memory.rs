@@ -35,19 +35,19 @@ impl InMemoryRepository {
 impl Repository for InMemoryRepository {
     async fn create_user(
         &self,
-        name: &str,
-        username: &str,
-        password: &str,
+        _name: &str,
+        _username: &str,
+        _password: &str,
     ) -> Result<User, RepoError> {
         unimplemented!()
     }
-    async fn find_user(&self, username: &str, password: &str) -> Result<User, RepoError> {
+    async fn find_user(&self, _username: &str, _password: &str) -> Result<User, RepoError> {
         unimplemented!()
     }
 
     async fn create_list(
         &self,
-        user: &str,
+        _user: &str,
         title: String,
         description: String,
     ) -> Result<TodoList, RepoError> {
@@ -65,11 +65,11 @@ impl Repository for InMemoryRepository {
         Ok(list)
     }
 
-    async fn all_lists(&self, user: &str) -> Result<Vec<TodoList>, RepoError> {
+    async fn all_lists(&self, _user: &str) -> Result<Vec<TodoList>, RepoError> {
         Ok(self.lists.read().unwrap().to_vec())
     }
 
-    async fn find_list(&self, user: &str, id: u8) -> Result<TodoList, RepoError> {
+    async fn find_list(&self, _user: &str, id: u8) -> Result<TodoList, RepoError> {
         let lists = self.lists.read().expect("mutex poisoned");
 
         if let Some(idx) = lists.iter().position(|x| x.id == id) {
@@ -80,7 +80,7 @@ impl Repository for InMemoryRepository {
 
     async fn update_list(
         &self,
-        user: &str,
+        _user: &str,
         id: u8,
         title: String,
         description: String,
@@ -96,7 +96,7 @@ impl Repository for InMemoryRepository {
         return Err(RepoError::NotFound);
     }
 
-    async fn remove_list(&self, user: &str, id: u8) -> Result<(), RepoError> {
+    async fn remove_list(&self, _user: &str, id: u8) -> Result<(), RepoError> {
         let mut lists = self.lists.write().expect("mutex poisoned");
 
         if let Some(idx) = lists.iter().position(|t| t.id == id) {
