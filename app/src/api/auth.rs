@@ -12,7 +12,7 @@ pub struct UserResponse {
 
 pub fn routes(repo: DynRepository) -> Router {
     Router::new()
-        .route("sign-up", post(sign_up))
+        .route("/sign-up", post(sign_up))
         .route("/sign-in", post(sign_in))
         .with_state(repo)
 }
