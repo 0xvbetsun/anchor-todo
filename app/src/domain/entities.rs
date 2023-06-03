@@ -1,18 +1,10 @@
 use serde::Serialize;
 
 #[derive(Clone, Serialize)]
-pub enum Status {
-    Active,
-    Deleted,
-}
-
-#[derive(Clone, Serialize)]
 pub struct TodoList {
     pub id: u8,
     pub title: String,
     pub description: String,
-    #[serde(skip_serializing)]
-    pub status: Status,
 }
 
 impl TodoList {
@@ -21,7 +13,6 @@ impl TodoList {
             id,
             title,
             description,
-            status: Status::Active,
         }
     }
 }
@@ -32,7 +23,6 @@ pub struct TodoItem {
     pub title: String,
     pub description: String,
     pub done: bool,
-    pub status: Status,
 }
 
 impl TodoItem {
@@ -42,13 +32,13 @@ impl TodoItem {
             title,
             description,
             done: false,
-            status: Status::Active,
         }
     }
 }
 
 #[derive(Debug)]
 pub struct User {
+    pub id: u16,
     pub name: String,
     pub username: String,
     pub password: String,

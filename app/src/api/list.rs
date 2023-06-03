@@ -10,7 +10,7 @@ use serde_json::json;
 
 use crate::{
     domain::entities::TodoList,
-    repository::list::{ListRepoError, ListRepository},
+    repository::{DynRepository, RepoError},
 };
 
 #[derive(Clone, Debug, Serialize)]
@@ -20,8 +20,6 @@ pub struct ListResponse {
     pub description: String,
 }
 
-pub type DynListRepository = std::sync::Arc<dyn ListRepository + Send + Sync>;
-
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct ListRequest {
     pub title: String,
@@ -30,7 +28,7 @@ pub struct ListRequest {
 
 const USER_KEY: &str = "EtNhzsHYkYHWX4dWia7snqubw4wLYcQrRuzHYGDof9nP";
 
-pub fn routes(repo: DynListRepository) -> Router {
+pub fn routes(repo: DynRepository) -> Router {
     Router::new()
         .route("/lists", get(all).post(create))
         .route("/lists/:id", get(find).patch(update).delete(remove))
@@ -38,37 +36,39 @@ pub fn routes(repo: DynListRepository) -> Router {
 }
 
 pub async fn create(
-    State(repo): State<DynListRepository>,
+    State(repo): State<DynRepository>,
     Json(req): Json<ListRequest>,
 ) -> Result<(StatusCode, Json<TodoList>), AppError> {
-    let list = repo.create(USER_KEY, req.title, req.description).await?;
+    let list = repo
+        .create_list(USER_KEY, req.title, req.description)
+        .await?;
 
     Ok((StatusCode::CREATED, list.into()))
 }
 
-pub async fn all(State(repo): State<DynListRepository>) -> Json<Vec<TodoList>> {
+pub async fn all(State(repo): State<DynRepository>) -> Json<Vec<TodoList>> {
     // TODO: extract key from header
-    let lists: Vec<TodoList> = repo.all(USER_KEY).await.unwrap();
+    let lists: Vec<TodoList> = repo.all_lists(USER_KEY).await.unwrap();
 
     lists.into()
 }
 
 pub async fn find(
     Path(id): Path<u8>,
-    State(repo): State<DynListRepository>,
+    State(repo): State<DynRepository>,
 ) -> Result<Json<TodoList>, AppError> {
-    let list: TodoList = repo.find(USER_KEY, id).await?;
+    let list: TodoList = repo.find_list(USER_KEY, id).await?;
 
     Ok(list.into())
 }
 
 pub async fn update(
     Path(id): Path<u8>,
-    State(repo): State<DynListRepository>,
+    State(repo): State<DynRepository>,
     Json(req): Json<ListRequest>,
 ) -> Result<Json<TodoList>, AppError> {
     let list: TodoList = repo
-        .update(USER_KEY, id, req.title, req.description)
+        .update_list(USER_KEY, id, req.title, req.description)
         .await?;
 
     Ok(list.into())
@@ -76,23 +76,23 @@ pub async fn update(
 
 pub async fn remove(
     Path(id): Path<u8>,
-    State(repo): State<DynListRepository>,
+    State(repo): State<DynRepository>,
 ) -> Result<impl IntoResponse, AppError> {
-    repo.remove(USER_KEY, id).await?;
+    repo.remove_list(USER_KEY, id).await?;
 
     Ok(StatusCode::NO_CONTENT)
 }
 
 pub enum AppError {
-    Repo(ListRepoError),
+    Repo(RepoError),
 }
 
 impl IntoResponse for AppError {
     fn into_response(self) -> Response {
         let (status, error_message) = match self {
-            AppError::Repo(ListRepoError::Unknown) => (StatusCode::BAD_REQUEST, "Bad request"),
-            AppError::Repo(ListRepoError::NotFound) => (StatusCode::NOT_FOUND, "List not found"),
-            AppError::Repo(ListRepoError::InvalidTitle) => {
+            AppError::Repo(RepoError::Unknown) => (StatusCode::BAD_REQUEST, "Bad request"),
+            AppError::Repo(RepoError::NotFound) => (StatusCode::NOT_FOUND, "List not found"),
+            AppError::Repo(RepoError::InvalidTitle) => {
                 (StatusCode::UNPROCESSABLE_ENTITY, "Invalid title")
             }
         };
@@ -105,8 +105,8 @@ impl IntoResponse for AppError {
     }
 }
 
-impl From<ListRepoError> for AppError {
-    fn from(inner: ListRepoError) -> Self {
+impl From<RepoError> for AppError {
+    fn from(inner: RepoError) -> Self {
         AppError::Repo(inner)
     }
 }

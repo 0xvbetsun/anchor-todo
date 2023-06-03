@@ -1,113 +1,77 @@
-use crate::domain::entities::Status;
-use crate::domain::entities::TodoList;
-use anchor_client::solana_client::rpc_filter::Memcmp;
-use anchor_client::solana_client::rpc_filter::RpcFilterType;
-use anchor_lang::prelude::Pubkey;
+use anchor_client::{Cluster, Program, Client};
+use anchor_client::solana_client::rpc_client::RpcClient;
+use anchor_client::solana_client::rpc_filter::{RpcFilterType, Memcmp};
+use anchor_lang::prelude::{Pubkey};
+use solana_sdk::signature::Signer;
 use axum::async_trait;
-use solana_sdk::signer::Signer;
+use solana_sdk::commitment_config::CommitmentConfig;
+use solana_sdk::signature::{Keypair, read_keypair_file};
 use solana_sdk::transaction::Transaction;
 use std::str::FromStr;
-use std::borrow::Borrow;
-use std::sync::atomic::Ordering;
+use std::sync::Arc;
 
-use super::repository::{InMemoryRepository, SolanaRepository};
+use crate::domain::entities::{User, TodoList};
+
+use super::{Repository, RepoError};
+
 use todo::accounts as todo_acc;
 use todo::constants as todo_const;
 use todo::instruction as todo_ix;
 use todo::state as todo_st;
 
-#[derive(Debug)]
-pub enum ListRepoError {
-    Unknown,
-    #[allow(dead_code)]
-    NotFound,
-    InvalidTitle,
+
+pub struct SolanaRepository {
+    pub payer: Arc<Keypair>,
+    pub program: Program<Arc<Keypair>>,
+    pub rpc_client: RpcClient,
 }
 
-#[async_trait]
-pub trait ListRepository: Send + Sync {
-    async fn create(&self, user: &str, title: String, description: String) -> Result<TodoList, ListRepoError>;
-    async fn all(&self, user: &str) -> Result<Vec<TodoList>, ListRepoError>;
-    async fn find(&self, user: &str, id: u8) -> Result<TodoList, ListRepoError>;
-    async fn update(
-        &self,
-        user: &str,
-        id: u8,
-        title: String,
-        description: String,
-    ) -> Result<TodoList, ListRepoError>;
-    async fn remove(&self, user: &str, id: u8) -> Result<(), ListRepoError>;
-}
-
-#[async_trait]
-impl ListRepository for InMemoryRepository {
-    async fn create(&self, user: &str, title: String, description: String) -> Result<TodoList, ListRepoError> {
-        let mut lock = match self.lists.write() {
-            Ok(lock) => lock,
-            _ => return Err(ListRepoError::Unknown),
+impl SolanaRepository {
+    pub fn try_new<'a>() -> Result<Self, &'a str> {
+        let cluster = Cluster::Custom(
+            "http://localhost:8899".to_owned(),
+            "ws://localhost:8900/".to_owned(),
+        );
+        let payer = match read_keypair_file("/Users/vbetsun/.config/solana/id.json") {
+            Ok(kp) => kp,
+            Err(_) => return Err("requires a keypair file"),
         };
 
-        if lock.iter().any(|list| list.title == title) {
-            return Err(ListRepoError::InvalidTitle);
-        }
-        let id = self.last_list_id.fetch_add(1, Ordering::Relaxed);
-        let list = TodoList::new(id, title, description);
-        lock.push(list.clone());
-        Ok(list)
-    }
+        let rpc_client =
+            RpcClient::new_with_commitment(cluster.url(), CommitmentConfig::confirmed());
 
-    async fn all(&self, user: &str) -> Result<Vec<TodoList>, ListRepoError> {
-        Ok(self.lists.read().unwrap().to_vec())
-    }
+        let payer = Arc::new(payer);
+        let provider =
+            Client::new_with_options(cluster, payer.clone(), CommitmentConfig::confirmed());
+        let program = provider.program(todo::ID);
 
-    async fn find(&self, user: &str, id: u8) -> Result<TodoList, ListRepoError> {
-        let lists = self.lists.read().expect("mutex poisoned");
-
-        if let Some(idx) = lists.iter().position(|x| x.id == id) {
-            return Ok(lists[idx].clone());
-        }
-        return Err(ListRepoError::NotFound);
-    }
-
-    async fn update(
-        &self,
-        user: &str,
-        id: u8,
-        title: String,
-        description: String,
-    ) -> Result<TodoList, ListRepoError> {
-        let mut lists = self.lists.write().expect("mutex poisoned");
-
-        if let Some(idx) = lists.iter().position(|t| t.id == id) {
-            lists[idx].title = title;
-            lists[idx].description = description;
-            return Ok(lists[idx].clone());
-        }
-
-        return Err(ListRepoError::NotFound);
-    }
-
-    async fn remove(&self, user: &str, id: u8) -> Result<(), ListRepoError> {
-        let mut lists = self.lists.write().expect("mutex poisoned");
-
-        if let Some(idx) = lists.iter().position(|t| t.id == id) {
-            lists.remove(idx);
-            return Ok(());
-        }
-
-        return Err(ListRepoError::NotFound);
+        Ok(Self {
+            program,
+            payer,
+            rpc_client,
+        })
     }
 }
 
+
 #[async_trait]
-impl ListRepository for SolanaRepository {
-    async fn create(&self, user:  &str, title: String, description: String) -> Result<TodoList, ListRepoError> {
+impl Repository for SolanaRepository {
+    async fn create_user(&self, name: &str, username: &str, password: &str) -> Result<User, RepoError> {
+        unimplemented!()
+    }
+    async fn find_user(&self, username: &str, password: &str) -> Result<User, RepoError>{
+        unimplemented!()
+    }
+    
+    async fn create_list(
+        &self,
+        user: &str,
+        title: String,
+        description: String,
+    ) -> Result<TodoList, RepoError> {
         let pk = Pubkey::from_str(user).unwrap();
 
-        let user: todo_st::UserProfile = self
-            .program
-            .account::<todo_st::UserProfile>(pk)
-            .unwrap();
+        let user: todo_st::UserProfile = self.program.account::<todo_st::UserProfile>(pk).unwrap();
 
         let (list_pda, _) = Pubkey::find_program_address(
             &[todo_const::LIST_TAG, &pk.to_bytes(), &[user.list_idx]],
@@ -143,11 +107,10 @@ impl ListRepository for SolanaRepository {
             id: user.list_idx,
             title,
             description,
-            status: Status::Active,
         })
     }
 
-    async fn all(&self, user: &str) -> Result<Vec<TodoList>, ListRepoError> {
+    async fn all_lists(&self, user: &str) -> Result<Vec<TodoList>, RepoError> {
         let pk = Pubkey::from_str(user).unwrap();
         let filters = vec![RpcFilterType::Memcmp(Memcmp::new_base58_encoded(
             8,
@@ -164,7 +127,6 @@ impl ListRepository for SolanaRepository {
                 id: list.id,
                 title: list.title,
                 description: list.description,
-                status: Status::Active,
             })
             .collect());
 
@@ -177,7 +139,7 @@ impl ListRepository for SolanaRepository {
 
         // println!("{user:?}");
     }
-    async fn find(&self, user: &str, id: u8) -> Result<TodoList, ListRepoError> {
+    async fn find_list(&self, user: &str, id: u8) -> Result<TodoList, RepoError> {
         let pk = Pubkey::from_str(user).unwrap();
         let (list_pda, _) = Pubkey::find_program_address(
             &[todo_const::LIST_TAG, &pk.to_bytes(), &[id]],
@@ -192,17 +154,16 @@ impl ListRepository for SolanaRepository {
             id: list.id,
             title: list.title,
             description: list.description,
-            status: Status::Active,
         })
     }
 
-    async fn update(
+    async fn update_list(
         &self,
         user: &str,
         id: u8,
         title: String,
         description: String,
-    ) -> Result<TodoList, ListRepoError> {
+    ) -> Result<TodoList, RepoError> {
         let pk = Pubkey::from_str(user).unwrap();
         let (list_pda, _) = Pubkey::find_program_address(
             &[todo_const::LIST_TAG, &pk.to_bytes(), &[id]],
@@ -238,11 +199,10 @@ impl ListRepository for SolanaRepository {
             id,
             title,
             description,
-            status: Status::Active,
         })
     }
 
-    async fn remove(&self, user: &str, id: u8) -> Result<(), ListRepoError> {
+    async fn remove_list(&self, user: &str, id: u8) -> Result<(), RepoError> {
         let pk = Pubkey::from_str(user).unwrap();
         let (list_pda, _) = Pubkey::find_program_address(
             &[todo_const::LIST_TAG, &pk.to_bytes(), &[id]],

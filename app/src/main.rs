@@ -1,11 +1,12 @@
 mod api;
+mod configuration;
 mod domain;
 mod repository;
-mod configuration;
 
-use crate::api::list::DynListRepository;
-use crate::repository::repository::SolanaRepository;
-use crate::configuration::get_config;
+use crate::configuration::{get_config, Storage};
+use crate::repository::DynRepository;
+use crate::repository::in_memory::InMemoryRepository;
+use crate::repository::solana::SolanaRepository;
 
 use axum::Router;
 use std::{net::SocketAddr, sync::Arc};
@@ -13,10 +14,13 @@ use std::{net::SocketAddr, sync::Arc};
 #[tokio::main]
 async fn main() {
     let cfg = get_config().expect("Failed to read configuration.");
-    // let repo = Arc::new(InMemoryRepository::new()) as DynListRepository;
-    let sol_repo = Arc::new(SolanaRepository::try_new().unwrap()) as DynListRepository;
 
-    let routes_apis = Router::new().merge(api::list::routes(sol_repo.clone()));
+    let repo: DynRepository = match cfg.storage {
+        Storage::InMemory => Arc::new(InMemoryRepository::new()),
+        Storage::Solana => Arc::new(SolanaRepository::try_new().unwrap()),
+    };
+
+    let routes_apis = Router::new().merge(api::list::routes(repo.clone()));
 
     let routes = Router::new()
         .merge(api::health::routes())
